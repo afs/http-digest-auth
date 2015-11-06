@@ -1,0 +1,32 @@
+# Package Files #
+*.jar
+*.war
+*.ear
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+
+# Maven and build files
+target/
+
+# Eclipse
+.classpath
+.project
+.settings
+.recommenders
+.metadata
+
+# Idea IntelliJ
+*.ipr
+*.iws
+*.iml
+.idea/
+
+# Databases
+DB*
+
+# Backups
+pom.xml.backup
+*~
+.#*
+\#*
