@@ -145,13 +145,13 @@ public class DigestHttp {
         if ( activeSessions.containsKey(opaque) ) {
             digestSession = activeSessions.get(opaque) ;
             // Checks for activeSession
-            // URI (subsumed by Shiro). Method.
+            // URI. Method.
         } else if ( pendingSessions.containsKey(opaque) ) {
             // This might be null due to another request
             // but we check below for null.
             digestSession = pendingSessions.remove(opaque) ;
             // New session checks.
-            // URI (subsumed by Shiro). Method.
+            // URI. Method.
         }
          
         if ( digestSession == null ) {
@@ -160,21 +160,44 @@ public class DigestHttp {
             return false ; 
         }
         
-        if ( ! digestSession.realm.equals(authHeader.realm) )
-            badRequest(request, response, "Realm change in Authorization header") ;
+        String requestUri = request.getRequestURI() ;
+        String requestMethod = request.getMethod() ;
+        String username = authHeader.username ;
+        
+        // Some checks.
+        // XXX Check in RFC
+        if ( ! digestSession.username.equals(authHeader.username) ) {
+            if ( log.isDebugEnabled() )
+                log.debug("Username change: header="+authHeader.username+" : expected"+ digestSession.username) ;  
+            badRequest(request, response, "Different username in 'Authorization' header") ;
+        }
+        if ( ! digestSession.realm.equals(authHeader.realm) ) {
+            if ( log.isDebugEnabled() )
+                log.debug("Realm change: header="+authHeader.realm+" : expected"+ digestSession.realm) ;  
+            badRequest(request, response, "Different realm in 'Authorization' header") ;
+        }
+        if ( ! requestUri.equals(authHeader.uri) ) {
+            if ( log.isDebugEnabled() )
+                log.debug("URI change: header="+authHeader.uri+" : expected"+ requestUri) ;  
+            badRequest(request, response, "Different URI in 'Authorization' header") ;
+        }
+        if ( ! requestMethod.equals(authHeader.method) ) {
+            if ( log.isDebugEnabled() )
+                log.debug("Method change: header="+authHeader.method+" : expected"+ requestMethod) ;  
+            badRequest(request, response, "Different HTTP method in 'Authorization' header") ;
+        }
         
         // Check nonce.
 //        log("Server nonce = "+perm.nonce);
 //        log("Header nonce = "+ah.nonce);
-        
-        String username = authHeader.username ;
+
         String password = getPassword(servletContext, username) ;
         
         if ( log.isDebugEnabled() )
             //log.debug("Attempt: User = " + username + " : Password = " + password);
             log.debug("Attempt: User = " + username);
         
-        String digestCalc = requestDigest(authHeader, digestSession, username, password) ;
+        String digestCalc = calcDigest(authHeader, password) ;
         String digestRequest = authHeader.response ;
         
         if ( ! digestCalc.equals(digestRequest) ) {
@@ -188,6 +211,7 @@ public class DigestHttp {
         
         boolean challengeResponse = StringUtils.isEmpty(digestSession.username) ; 
         if ( challengeResponse ) {
+            // First time - complete digestSession details.
             digestSession.username = username ;
             activeSessions.put(opaque, digestSession) ;
         }
@@ -244,12 +268,11 @@ public class DigestHttp {
 
     /** From the digest header, and the expected credentials,
      * calculate the string expected in the "response" field of the
-     * "Authorization" header.   
+     * "Authorization" header.
+     * Method and URI are taken from the AuthHeader   
      */
-    private static String requestDigest(AuthHeader auth, DigestSession perm, String username, String password) {
-        // TODO Get method and URI from request.
-        
-        String a1 = A1_MD5(username, perm.realm, password) ;
+    private static String calcDigest(AuthHeader auth, String password) {
+        String a1 = A1_MD5(auth.username, auth.realm, password) ;
         if ( auth.qop == null ) {
             // RFC 2069
             // Firefox seems to prefer this form??

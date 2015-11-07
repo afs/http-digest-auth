@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.seaborne.auth;
+package org.seaborne.auth.shiro;
 
 import java.util.Locale;
 
@@ -88,7 +88,7 @@ public class BasicHttpAuthenticationFilter extends AuthenticatingFilter {
      */
     private static final Logger log = LoggerFactory.getLogger(BasicHttpAuthenticationFilter.class);
     private static void logx(Logger log, String msg) {
-        //logx(log, msg); 
+        //log.info(msg); 
     }
 
     /**

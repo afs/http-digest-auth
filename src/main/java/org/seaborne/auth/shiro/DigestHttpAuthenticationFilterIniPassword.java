@@ -25,8 +25,7 @@ import org.apache.shiro.web.env.IniWebEnvironment ;
 import org.apache.shiro.web.util.WebUtils ;
 import org.slf4j.LoggerFactory ;
 
-/** HTTP Digest authentication, getting the password from the [users] section of an Ini file.
- */
+/** HTTP Digest authentication, getting the password from the [users] section of a Shiro ini file. */
 public class DigestHttpAuthenticationFilterIniPassword extends DigestHttpAuthenticationFilter {
 
     private volatile boolean initialized = false ;

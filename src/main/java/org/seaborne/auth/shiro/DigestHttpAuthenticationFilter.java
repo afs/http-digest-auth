@@ -70,29 +70,6 @@ public abstract class DigestHttpAuthenticationFilter extends AuthenticatingFilte
         this.engine = new DigestHttp(log, "Login", this::getPassword) ; 
     }
     
-    // XXX Either 2 cases: 
-    //   first attempt => isAccessAllowed=false, onAccessDenied => 403
-    //        No username yet.  
-    //                    isAccessAllowed=false  onAccessDenied isLoginRequest, executeLogin
-    // 
-    //   subsequent attempts => isAccessAllowed
-    // (Or all-in-one accessYesOrNo+)
-
-    /*
-     * isAccessAllowed :: only check the activeSessions map.
-     * onAccessDenied :: only check the pendingSessions map.
-     * 
-     * onAccessDenied is
-     *    boolean loggedIn = false; //false by default or we wouldn't be in this method
-          if (isLoginAttempt(request, response)) {
-              loggedIn = executeLogin(request, response);
-          }
-          if (!loggedIn) {
-              sendChallenge(request, response);
-          }
-          return loggedIn;
-     */
-    
     /**
      * Determines whether the current subject should be allowed to make the current request.
      * @return <code>true</code> if request should be allowed access
