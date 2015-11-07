@@ -39,7 +39,13 @@ public class DigestHttpAuthenticationFilterIniPassword extends DigestHttpAuthent
     protected String getPassword(ServletContext servletContext, String username) {
         if ( username == null )
             return null ;
-        return usersSection(servletContext).get(username) ;
+        String entry = usersSection(servletContext).get(username) ;
+        // Parse, extract
+        // XXX What is the correct Shiro way to do this? Quoted strings?
+        if ( ! entry.contains(",") )
+            return entry ; 
+        String[]s = entry.split("\\s*,\\s*", 2) ;
+        return s[0] ;
     }
     
     // Delayed initialization of usersSection

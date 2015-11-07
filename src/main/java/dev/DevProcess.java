@@ -19,6 +19,8 @@
 package dev;
 
 public class DevProcess {
+    // Realm in request
+    
     // "Digest request" operation.
     //   isFirst (i.e not logged in)
     // Digest : method and URI from request  
@@ -31,14 +33,6 @@ public class DevProcess {
     
     //Head: Authorization = Basic dTI6cHc0NTY=
     // u2, pw456
-    
-    // BasicHttpAuthenticationFilter
-    // isLoginAttempt  called twice.
-    //   Once from isAccessAllowed, isLoginRequest, once from 
-    
-    // AccessControlFilter.onPreHandle = isAccessAllowed || onAccessDenied
-    // isAccessAllowed -> isLoginRequest -> isLoginAttempt
-    // onAccessDenied -> isLoginAttempt
     
     // Tests
 }

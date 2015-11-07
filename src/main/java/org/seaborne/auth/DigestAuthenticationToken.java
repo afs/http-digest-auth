@@ -20,6 +20,7 @@ package org.seaborne.auth;
 
 import org.apache.shiro.authc.AuthenticationToken ;
 
+// NOT USED
 public class DigestAuthenticationToken implements AuthenticationToken {
 
     private final String username;

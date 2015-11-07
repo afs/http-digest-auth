@@ -33,6 +33,7 @@ import org.apache.shiro.web.filter.authc.AuthenticatingFilter ;
 import org.apache.shiro.web.filter.authc.BasicHttpAuthenticationFilter ;
 import org.apache.shiro.web.util.WebUtils ;
 import org.seaborne.auth.AuthHeader ;
+import org.seaborne.auth.DigestAuthenticationToken ;
 import org.seaborne.auth.DigestHttp ;
 import org.seaborne.auth.DigestSession ;
 import org.slf4j.Logger ;
@@ -47,8 +48,8 @@ import org.slf4j.LoggerFactory ;
  * @see <a href="https://en.wikipedia.org/wiki/Digest_access_authentication">Wikipedia entry on Digest Access Authentication</a>
  * @see BasicHttpAuthenticationFilter
  */
-public abstract class DigestHttpAuthenticationFilter extends AuthenticatingFilter {
-    private static final Logger log = LoggerFactory.getLogger(DigestHttpAuthenticationFilter.class);
+public abstract class DigestHttpAuthenticationFilter2Step extends AuthenticatingFilter {
+    private static final Logger log = LoggerFactory.getLogger(DigestHttpAuthenticationFilter2Step.class);
 
     /** HTTP Authorization header, equal to <code>Authorization</code> */
     protected static final String AUTHORIZATION_HEADER = "Authorization";
@@ -59,65 +60,81 @@ public abstract class DigestHttpAuthenticationFilter extends AuthenticatingFilte
     /** The name of the scheme */ 
     private static String DIGEST_AUTH = HttpServletRequest.DIGEST_AUTH ;
 
-    private DigestHttp engine;
+    private final DigestHttp engine;
 
-    private String applicationName = "Login" ;
-
-    protected DigestHttpAuthenticationFilter() {
-        this.engine = new DigestHttp(log, applicationName, this::getPassword) ; 
+    protected DigestHttpAuthenticationFilter2Step() {
+        this.engine = new DigestHttp(log, "Login", this::getPassword) ; 
     }
 
     // Code for two-stage process.
-    //  See DigestHttpAuthenticationFilter2Step
-    //  That needs to call accessYesOrNo twice (a second time on inAccessDenied to know if it is
-    //    true or false) which makes any nc processing ugly.
-    
+    // This follows BasicHttpAuthenticationFilter.
+    //   Two calls to accessYesOrNo possible, 
+    //     isAccessAllowed, before subject.isAuthenticated)
+    //     onAccessDenied, -> excuteLogin
+    //   accessYesOrNo works on the internal state of digect authetnication so that is a bit ugly.
+    /**
+     * Determines whether the current subject should be allowed to make the current request.
+     * @return <code>true</code> if request should be allowed access
+     */
     @Override
     protected boolean isAccessAllowed(ServletRequest request, ServletResponse response, Object mappedValue) {
-        // Do everything, including sending a challenge, in one step.
-        // This way, the header is processed only once.
-        // It's equiavlent to implementing "onPreHandle"
-        return wholeProcess(request, response) ;
+        // Parse, decide fast path (this will use cookies)
+        if ( log.isDebugEnabled() ) {
+            String header = getAuthzHeader(request) ;
+            log.debug("**** **** isAccessAllowed -> "+header);
+        }
+        boolean b = accessYesOrNo(request, response) ;
+        // Checks for 
+        //  nc, cnonce
+        
+        // super.isAccessAllowed -->
+        //      return super.isAccessAllowed(request, response, mappedValue) ||
+        //        (!isLoginRequest(request, response) && isPermissive(mappedValue));
+        // and we fix isLoginRequest= false and isPermissive=false
+        
+        // super.super.isAccessAllowed ->
+        //      Subject subject = getSubject(request, response);
+        //      return subject.isAuthenticated();
+
+        // Workflow:
+        // (No header or old session) -> false -> onAccessDenied -> executeLogin ->  false -> challenge
+        // 
+        // Challenge response -> true but subject not authenticated  
+        //    -> onAccessDenied -> executeLogin -> subject authenticated
+        //
+        // Challenge response -> true and authenticated.
+        
+        return b && super.isAccessAllowed(request, response, mappedValue) ;
     }
     
     @Override
-    protected boolean onAccessDenied(ServletRequest request, ServletResponse response) throws Exception {
-        return false ;
+    protected boolean isPermissive(Object mappedValue) {
+        return false;
     }
-    
 
-    // Flatten:
-    // Override onPreHandle --> 
-    //    isAccessAllowed(request, response, mappedValue) || onAccessDenied(request, response, mappedValue);
-    //      isAccessAllowed
-    //        accessYesOrNo , isLoginRequest(request, response) , isPermissive(mappedValue))
-    //      onAccessDenied
-    //        accessYesOrNo , executeLogin,  sendChallenge 
-    // Flatten to one operation and one call of "accessYesOrNo"
-//    @Override
-//    public boolean onPreHandle(ServletRequest request, ServletResponse response, Object mappedValue) throws Exception {
-//        return wholeProcess(request, response) ;
-//    }
-    
-    /** Execute the HTTP Digect authentication process and the Shiro login process.
-     *  Calls accessYesOrNo once per requets, making "nc" processing cleaner. 
+    /**
+     * Processes unauthenticated requests.
+     * Processes requests where the subject was denied access as determined by the
+     * {@link #isAccessAllowed(javax.servlet.ServletRequest, javax.servlet.ServletResponse, Object) isAccessAllowed}
+     * method.
+     *
+     * @return <code>false</code>. This method handles the HTTP 401 challenge.
+     * @throws Exception 
      */
+    @Override
+    protected boolean onAccessDenied(ServletRequest request, ServletResponse response) throws Exception {
+        boolean loggedIn = false;
     
-    private boolean wholeProcess(ServletRequest request, ServletResponse response) {
-        if ( log.isDebugEnabled() ) { 
-            String header = getAuthzHeader(request) ;
-            log.debug("**** **** HTTP Digest Authentiation -> "+header);
+        // Call accessYesOrNo again.  It may be have been false in isAccessAllowed,
+        // or true but the subject not authenticated. 
+        
+        if ( accessYesOrNo(request, response) ) {
+            loggedIn = executeLogin(request, response);
         }
-        boolean b = accessYesOrNo(request, response) ;
-        if ( !b ) {
-            sendChallenge(request, response) ;
-            return false ;
+        if (!loggedIn) {
+            sendChallenge(request, response);
         }
-        Subject subject = getSubject(request, response);
-        if ( subject.isAuthenticated() )
-            return true ;
-        try { return executeLogin(request, response) ; } 
-        catch (Exception ex) { return false ; }
+        return loggedIn;
     }
     
     /** The RFC 2617 algorithm for determing whether a request is acceptable or not.
@@ -141,41 +158,6 @@ public abstract class DigestHttpAuthenticationFilter extends AuthenticatingFilte
                                      ServletRequest request, ServletResponse response) {
         return false;
     }
-    
-    /**
-     * Returns the name to use in the ServletResponse's <b><code>WWW-Authenticate</code></b> header.
-     * <p/>
-     * Per RFC 2617, this name name is displayed to the end user when they are asked to authenticate.  Unless overridden
-     * by the {@link #setApplicationName(String) setApplicationName(String)} method, the default value is 'application'.
-     * <p/>
-     * See {@link #setApplicationName(String) setApplicationName(String)}
-     *
-     * @return the name to use in the ServletResponse's 'WWW-Authenticate' header.
-     */
-    public String getApplicationName() {
-        return applicationName;
-    }
-
-    /**
-     * Sets the name to use in the ServletResponse's <b><code>WWW-Authenticate</code></b> header.
-     * <p/>
-     * Per RFC 2617, this name name is displayed to the end user when they are asked to authenticate.  Unless overridden
-     * by this method, the default value is &quot;application&quot;
-     * <p/>
-     * Side note: As you can see from the header text, the HTTP Basic specification calls
-     * this the authentication 'realm', but we call this the 'applicationName' instead to avoid confusion with
-     * Shiro's Realm constructs.
-     *
-     * @param applicationName the name to use in the ServletResponse's 'WWW-Authenticate' header.
-     */
-    public void setApplicationName(String applicationName) {
-        boolean newName = (applicationName == null || ! applicationName.equals(this.applicationName) ) ;
-        this.applicationName = applicationName;
-        if ( newName )
-            // Drop old state.
-            this.engine = new DigestHttp(log, applicationName, this::getPassword) ; 
-    }
-
     
     /** Return the password for the named user, or null if none found.
      * @param servletContext
@@ -202,35 +184,31 @@ public abstract class DigestHttpAuthenticationFilter extends AuthenticatingFilte
         if (authorizationHeader == null || authorizationHeader.length() == 0) {
             // Create an empty authentication token since there is no
             // Authorization header.
-            return untoken(request, response) ;
+            return createToken("", "", request, response);
         }
         if (log.isDebugEnabled()) {
             log.debug("Attempting to execute login with headers [" + authorizationHeader + "]");
         }
 
-        // XXX Yuk - reparse to get user.
+        // XXX Yuk - reparse.
         HttpServletRequest httpRequest = WebUtils.toHttp(request);
         AuthHeader ah = AuthHeader.parse(authorizationHeader, httpRequest.getMethod()) ;
         if ( ah == null )
             return createToken("", "", request, response);
         DigestSession perm = engine.getCredentials(ah.opaque) ;
         if ( perm == null )
-            return untoken(httpRequest, response) ;
+            return createToken("", "");
         // Token is the user name and our generated reference (both are wire-visible). 
+        
         String password = getPassword(request.getServletContext(), perm.username) ;
         
         //return createToken(perm.username, password);
         return createToken(perm.username, password, request, response);
     }
     
-    private AuthenticationToken untoken(ServletRequest request, ServletResponse response) {
-        return createToken("", "", request, response);
+    private AuthenticationToken createToken(String username, String opaque) {
+        return new DigestAuthenticationToken(username, opaque); 
     }
-    
-    // XXX Would like to use opaque as the credentials but other Shiro steps need the true password. ???
-//    private AuthenticationToken createToken(String username, String opaque) {
-//        return new DigestAuthenticationToken(username, opaque); 
-//    }
 
     /**
      * Builds the challenge for authorization by setting a HTTP <code>401</code> (Unauthorized) status as well as the

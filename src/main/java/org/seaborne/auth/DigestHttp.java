@@ -33,15 +33,16 @@ import javax.servlet.http.HttpServletResponse ;
 
 import org.apache.commons.lang3.StringUtils ;
 import org.slf4j.Logger ;
+import org.slf4j.LoggerFactory ;
 
 /** Core engine for Digest Authetication (<a href="ftp://ftp.isi.edu/in-notes/rfc2617.txt">RFC 2617</a>).
  * <p>
  * This implementation is a 'clean room' Java implementation of Digest HTTP Authentication specification per
- * <a href="ftp://ftp.isi.edu/in-notes/rfc2617.txt">RFC 2617</a>.
+ * <a href="https://tools.ietf.org/html/rfc2617">RFC 2617</a>.
  * <p>
  * Digest authentication functions as follows:
  * <ol>
- * <li>A request comes in for a resource that requires authentication.</li>
+ * <li>A request comes in for a resource that requires authentication and authorization.</li>
  * <li>The server replies with a 401 response status, sets the <code>WWW-Authenticate</code> header,
  *  with a opaque string (to identify this session),   
  * <li>Upon receiving this <code>WWW-Authenticate</code> challenge from the server, the client then takes a
@@ -56,8 +57,8 @@ import org.slf4j.Logger ;
  * This class does not concern itself with how the password is obtained. 
  * See operation {@link #getPassword(ServletContext, String)}.     
  *
- * @see <a href="ftp://ftp.isi.edu/in-notes/rfc2617.txt">RFC 2617</a>
- * @see <a href="https://en.wikipedia.org/wiki/Digest_access_authentication">Digest Access Authentication</a>
+ * @see <a href="https://tools.ietf.org/html/rfc2617">RFC 2617</a>
+ * @see <a href="https://en.wikipedia.org/wiki/Digest_access_authentication">Wikipedia: Digest Access Authentication</a>
  */
 
 public class DigestHttp {
@@ -90,6 +91,10 @@ public class DigestHttp {
      */
     protected DigestHttp(Logger log, PasswordGetter pwGetter) {
         this(log, null, pwGetter) ;
+    }
+
+    protected DigestHttp(PasswordGetter pwGetter) {
+        this(LoggerFactory.getLogger(DigestHttp.class), null, pwGetter) ;
     }
 
     /** Create a HTTP digest authentication engine : subclass must implement
@@ -144,14 +149,10 @@ public class DigestHttp {
         
         if ( activeSessions.containsKey(opaque) ) {
             digestSession = activeSessions.get(opaque) ;
-            // Checks for activeSession
-            // URI. Method.
         } else if ( pendingSessions.containsKey(opaque) ) {
             // This might be null due to another request
             // but we check below for null.
             digestSession = pendingSessions.remove(opaque) ;
-            // New session checks.
-            // URI. Method.
         }
          
         if ( digestSession == null ) {
@@ -166,7 +167,7 @@ public class DigestHttp {
         
         // Some checks.
         // XXX Check in RFC
-        if ( ! digestSession.username.equals(authHeader.username) ) {
+        if ( ! digestSession.username.isEmpty() && ! digestSession.username.equals(authHeader.username) ) {
             if ( log.isDebugEnabled() )
                 log.debug("Username change: header="+authHeader.username+" : expected"+ digestSession.username) ;  
             badRequest(request, response, "Different username in 'Authorization' header") ;
