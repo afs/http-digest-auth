@@ -41,10 +41,26 @@
     <ver.commons>1.2.4</ver.commons>
     <ver.commons-codec>1.10</ver.commons-codec>
     <ver.commons-lang>3.4</ver.commons-lang>
+    <ver.slf4j>1.7.12</ver.slf4j>
   </properties>
 
   <dependencies>
 
+    <!-- Non-RDF utilities -->
+    <dependency>
+      <groupId>org.apache.jena</groupId>
+      <artifactId>jena-base</artifactId>
+      <version>${ver.jena}</version>
+    </dependency>
+    
+    <!-- JSON stuff in wrong place
+    <dependency>
+      <groupId>org.apache.jena</groupId>
+      <artifactId>jena-arq</artifactId>
+      <version>${ver.jena}</version>
+    </dependency>
+    -->
+    
     <dependency>
       <groupId>org.apache.shiro</groupId>
       <artifactId>shiro-core</artifactId>
@@ -70,6 +86,24 @@
       <version>${ver.jetty}</version>
     </dependency>    
     -->
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>${ver.slf4j}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+      <version>${ver.slf4j}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>jcl-over-slf4j</artifactId>
+      <version>${ver.slf4j}</version>
+    </dependency>
 
     <dependency>
 	<groupId>commons-codec</groupId>

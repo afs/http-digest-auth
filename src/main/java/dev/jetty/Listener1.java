@@ -16,8 +16,25 @@
  * limitations under the License.
  */
 
-package dev;
+package dev.jetty;
 
-public class RunJetty {
+import javax.servlet.ServletContextEvent ;
+import javax.servlet.ServletContextListener ;
+
+import org.slf4j.Logger ;
+import org.slf4j.LoggerFactory ;
+
+public class Listener1 implements ServletContextListener {
+    private static Logger log = LoggerFactory.getLogger(Listener1.class) ;
+    
+    @Override
+    public void contextInitialized(ServletContextEvent sce) {
+        log.info("contextInitialized");
+    }
+
+    @Override
+    public void contextDestroyed(ServletContextEvent sce) {
+        log.info("contextDestroyed");
+    }
 
 }
