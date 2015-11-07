@@ -81,12 +81,12 @@ import org.slf4j.LoggerFactory;
  * @see <a href="http://en.wikipedia.org/wiki/Basic_access_authentication">Basic Access Authentication</a>
  * @since 0.9
  */
-public class BasicHttpAuthenticationFilter extends AuthenticatingFilter {
-
+public class BasicHttpAuthenticationFilterX extends AuthenticatingFilter {
+    // Developement : with debugging. 
     /**
      * This class's private logger.
      */
-    private static final Logger log = LoggerFactory.getLogger(BasicHttpAuthenticationFilter.class);
+    private static final Logger log = LoggerFactory.getLogger(BasicHttpAuthenticationFilterX.class);
     private static void logx(Logger log, String msg) {
         //log.info(msg); 
     }
