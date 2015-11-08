@@ -62,6 +62,8 @@ import org.slf4j.LoggerFactory ;
  */
 
 public class DigestHttp {
+    public enum AccessStatus { YES, NO, BAD }  
+    
     /** Log on a provided logger. */
     private final Logger log ;
 
@@ -101,8 +103,10 @@ public class DigestHttp {
      * {@link #getPassword} and {@link #getRealm}   
      */
     public DigestHttp(Logger log, String realm, PasswordGetter pwGetter) {
-        Objects.requireNonNull(log) ;
+        if ( log == null )
+            log = LoggerFactory.getLogger(DigestHttp.class) ;
         Objects.requireNonNull(pwGetter) ;
+        Objects.requireNonNull(realm) ;
         this.realm = realm ;
         this.passwordGetter = pwGetter ;
         this.log = log ;
@@ -112,12 +116,12 @@ public class DigestHttp {
      * See also {@link #sendChallenge(HttpServletRequest, HttpServletResponse)}.
      * @return <code>true</code> if accepable, else <code>false</code>.
      */
-    public boolean accessYesOrNo(HttpServletRequest request, HttpServletResponse response) {
+    public AccessStatus accessYesOrNo(HttpServletRequest request, HttpServletResponse response) {
         String x = getAuthzHeader(request) ;
         if ( x == null ) {
             if ( log.isDebugEnabled() )
                 log.debug("accessYesOrNo: null header");
-            return false ;
+            return AccessStatus.NO ;
         }
         if ( log.isDebugEnabled() )
             log.debug("accessYesOrNo: "+x);
@@ -128,17 +132,20 @@ public class DigestHttp {
         if ( authHeader == null ) {
             if ( log.isDebugEnabled() )
                 log.debug("accessYesOrNo: Bad auth header");
-            return false ;
+            return AccessStatus.BAD ;
         }
         
-        if ( ! authHeader.parsed.containsKey(AuthHeader.strDigest) )
+        if ( ! authHeader.parsed.containsKey(AuthHeader.strDigest) ) {
+            // XXX Does
             badRequest(request, response, "No 'Digest' in Authorization header") ;
+            return AccessStatus.BAD ;
+        }
         
         if ( authHeader.opaque == null ) {
             if ( log.isDebugEnabled() )
                 log.debug("accessYesOrNo: Bad Authorization header") ;
             badRequest(request, response, "Bad Authorization header") ;
-            return false ;
+            return AccessStatus.BAD ;
         }
         
         // XXX CONCURRENECY 
@@ -157,8 +164,8 @@ public class DigestHttp {
          
         if ( digestSession == null ) {
             if ( log.isDebugEnabled() )
-                log.debug("accessYesOrNo: No opaque");
-            return false ; 
+                log.debug("accessYesOrNo: No session for opaque found");
+            return AccessStatus.NO ; 
         }
         
         String requestUri = request.getRequestURI() ;
@@ -171,28 +178,43 @@ public class DigestHttp {
             if ( log.isDebugEnabled() )
                 log.debug("Username change: header="+authHeader.username+" : expected"+ digestSession.username) ;  
             badRequest(request, response, "Different username in 'Authorization' header") ;
+            return AccessStatus.BAD ;
         }
         if ( ! digestSession.realm.equals(authHeader.realm) ) {
             if ( log.isDebugEnabled() )
                 log.debug("Realm change: header="+authHeader.realm+" : expected"+ digestSession.realm) ;  
             badRequest(request, response, "Different realm in 'Authorization' header") ;
+            return AccessStatus.BAD ;
         }
         if ( ! requestUri.equals(authHeader.uri) ) {
             if ( log.isDebugEnabled() )
                 log.debug("URI change: header="+authHeader.uri+" : expected"+ requestUri) ;  
             badRequest(request, response, "Different URI in 'Authorization' header") ;
+            return AccessStatus.BAD ;
         }
         if ( ! requestMethod.equals(authHeader.method) ) {
             if ( log.isDebugEnabled() )
                 log.debug("Method change: header="+authHeader.method+" : expected"+ requestMethod) ;  
             badRequest(request, response, "Different HTTP method in 'Authorization' header") ;
+            return AccessStatus.BAD ;
         }
         
         // Check nonce.
 //        log("Server nonce = "+perm.nonce);
 //        log("Header nonce = "+ah.nonce);
 
+        if ( username == null ) {
+            if ( log.isDebugEnabled() )
+                log.debug("No password for user '"+username+"'");
+            return AccessStatus.NO ;
+        }
+            
         String password = getPassword(servletContext, username) ;
+        if ( password == null ) {
+            if ( log.isDebugEnabled() )
+                log.debug("No password for user '"+username+"'");
+            return AccessStatus.NO ;
+        }
         
         if ( log.isDebugEnabled() )
             //log.debug("Attempt: User = " + username + " : Password = " + password);
@@ -207,7 +229,7 @@ public class DigestHttp {
             activeSessions.remove(opaque) ;
             if ( log.isDebugEnabled() )
                 log.debug("Digest does not match");
-            return false ; 
+            return AccessStatus.NO ; 
         }
         
         boolean challengeResponse = StringUtils.isEmpty(digestSession.username) ; 
@@ -221,7 +243,7 @@ public class DigestHttp {
             //log.debug("request: "+httpRequest.getRequestURI());
             log.debug("User "+digestSession.username+" authorized") ;
         }
-        return true ;
+        return AccessStatus.YES ;
     }
 
     /** Return the session credentials keyed by {@code opaque}.

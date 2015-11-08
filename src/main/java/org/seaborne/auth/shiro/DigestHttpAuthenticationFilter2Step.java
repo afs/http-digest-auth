@@ -144,7 +144,7 @@ public abstract class DigestHttpAuthenticationFilter2Step extends Authenticating
     private boolean accessYesOrNo(ServletRequest request, ServletResponse response) {
         HttpServletRequest httpRequest = WebUtils.toHttp(request) ;
         HttpServletResponse httpResponse = WebUtils.toHttp(response) ;
-        return engine.accessYesOrNo(httpRequest, httpResponse) ;
+        return DigestHttp.AccessStatus.YES == engine.accessYesOrNo(httpRequest, httpResponse) ;
     }
 
     @Override

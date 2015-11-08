@@ -65,6 +65,29 @@
     <param-name>shiroConfigLocations</param-name>
     <param-value>file:shiro.ini</param-value>
   </context-param>
+
+  <!-- Standalone digest authentation filter -->
+   <filter>
+     <filter-name>DigestFilter</filter-name>
+     <filter-class>org.seaborne.auth.DigestFilter</filter-class>
+     <init-param>
+        <param-name>password-file</param-name>
+        <param-value>passwd</param-value>
+     </init-param>
+     <init-param>
+        <param-name>realm</param-name>
+        <param-value>LOGIN</param-value>
+     </init-param>
+  </filter>
+
+  <filter-mapping>
+    <filter-name>DigestFilter</filter-name>
+    <url-pattern>/area57</url-pattern>
+    <dispatcher>REQUEST</dispatcher>
+    <dispatcher>FORWARD</dispatcher>
+    <dispatcher>INCLUDE</dispatcher>
+    <dispatcher>ERROR</dispatcher>
+  </filter-mapping>
   
   <!-- Servlets -->
 

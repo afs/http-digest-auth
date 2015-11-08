@@ -18,6 +18,7 @@
 
 package org.seaborne.auth;
 
+// NOT USED
 /** A single HTTP request for a digest-controled operation. */ 
 public class DigestRequest {
     final public AuthHeader authHeader ; 

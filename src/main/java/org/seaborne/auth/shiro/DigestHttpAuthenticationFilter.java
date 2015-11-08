@@ -19,6 +19,7 @@
 package org.seaborne.auth.shiro;
 
 import java.util.Locale ;
+import org.seaborne.auth.DigestHttp.AccessStatus ;
 
 import javax.servlet.ServletContext ;
 import javax.servlet.ServletRequest ;
@@ -108,11 +109,18 @@ public abstract class DigestHttpAuthenticationFilter extends AuthenticatingFilte
             String header = getAuthzHeader(request) ;
             log.debug("**** **** HTTP Digest Authentiation -> "+header);
         }
-        boolean b = accessYesOrNo(request, response) ;
-        if ( !b ) {
-            sendChallenge(request, response) ;
-            return false ;
+        AccessStatus decision = accessYesOrNo(request, response) ;
+        switch ( decision ) {
+            case BAD :
+                // Have sent the 400
+                return false ;
+            case NO :
+                sendChallenge(request, response) ;
+                return false ;
+            case YES :
+                break;
         }
+        
         Subject subject = getSubject(request, response);
         if ( subject.isAuthenticated() )
             return true ;
@@ -124,7 +132,7 @@ public abstract class DigestHttpAuthenticationFilter extends AuthenticatingFilte
      * See also {@link #sendChallenge(HttpServletRequest, HttpServletResponse)}.
      * @return <cod>true</code> if accepable, else <code>false</code>.
      */
-    private boolean accessYesOrNo(ServletRequest request, ServletResponse response) {
+    private AccessStatus accessYesOrNo(ServletRequest request, ServletResponse response) {
         HttpServletRequest httpRequest = WebUtils.toHttp(request) ;
         HttpServletResponse httpResponse = WebUtils.toHttp(response) ;
         return engine.accessYesOrNo(httpRequest, httpResponse) ;

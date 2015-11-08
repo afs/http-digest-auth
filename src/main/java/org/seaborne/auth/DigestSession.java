@@ -23,7 +23,7 @@ public class DigestSession {
     public final String opaque ;
     public String username ;
     public final String realm ;
-    // XXX remove
+    // XXX remove? Used only for the challenge response -> ??
     public String method ;
     // XXX remove
     public String uri ;
