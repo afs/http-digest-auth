@@ -34,8 +34,8 @@
   </licenses>
 
   <properties>
-    <ver.jena>3.0.1-SNAPSHOT</ver.jena>
-    <ver.fuseki>2.3.1-SNAPSHOT</ver.fuseki>
+    <ver.jena>3.1.0-SNAPSHOT</ver.jena>
+    <ver.fuseki>2.4.0-SNAPSHOT</ver.fuseki>
     <ver.jetty>9.3.5.v20151012</ver.jetty>
     <ver.shiro>1.2.4</ver.shiro>
     <ver.commons>1.2.4</ver.commons>
