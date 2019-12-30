@@ -21,12 +21,12 @@ package org.seaborne.auth;
 // NOT USED
 /** A single HTTP request for a digest-controled operation. */ 
 public class DigestRequest {
-    final public AuthHeader authHeader ; 
+    final public AuthResponseHeader authHeader ; 
     final public DigestSession digestSession ;
     final public String uri;
     final public String method;
     
-    public DigestRequest(AuthHeader authHeader, DigestSession digestSession, String requestUri, String requestMethod) {
+    public DigestRequest(AuthResponseHeader authHeader, DigestSession digestSession, String requestUri, String requestMethod) {
         this.authHeader = authHeader ;
         this.digestSession= digestSession ;
         this.uri = requestUri ;

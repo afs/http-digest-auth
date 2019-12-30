@@ -33,7 +33,7 @@ import org.apache.shiro.subject.Subject ;
 import org.apache.shiro.web.filter.authc.AuthenticatingFilter ;
 import org.apache.shiro.web.filter.authc.BasicHttpAuthenticationFilter ;
 import org.apache.shiro.web.util.WebUtils ;
-import org.seaborne.auth.AuthHeader ;
+import org.seaborne.auth.AuthResponseHeader ;
 import org.seaborne.auth.DigestHttp ;
 import org.seaborne.auth.DigestSession ;
 import org.slf4j.Logger ;
@@ -218,7 +218,7 @@ public abstract class DigestHttpAuthenticationFilter extends AuthenticatingFilte
 
         // XXX Yuk - reparse to get user.
         HttpServletRequest httpRequest = WebUtils.toHttp(request);
-        AuthHeader ah = AuthHeader.parse(authorizationHeader, httpRequest.getMethod()) ;
+        AuthResponseHeader ah = AuthResponseHeader.parse(authorizationHeader, httpRequest.getMethod()) ;
         if ( ah == null )
             return createToken("", "", request, response);
         DigestSession perm = engine.getCredentials(ah.opaque) ;

@@ -32,7 +32,7 @@ import org.apache.shiro.subject.Subject ;
 import org.apache.shiro.web.filter.authc.AuthenticatingFilter ;
 import org.apache.shiro.web.filter.authc.BasicHttpAuthenticationFilter ;
 import org.apache.shiro.web.util.WebUtils ;
-import org.seaborne.auth.AuthHeader ;
+import org.seaborne.auth.AuthResponseHeader ;
 import org.seaborne.auth.DigestAuthenticationToken ;
 import org.seaborne.auth.DigestHttp ;
 import org.seaborne.auth.DigestSession ;
@@ -192,7 +192,7 @@ public abstract class DigestHttpAuthenticationFilter2Step extends Authenticating
 
         // XXX Yuk - reparse.
         HttpServletRequest httpRequest = WebUtils.toHttp(request);
-        AuthHeader ah = AuthHeader.parse(authorizationHeader, httpRequest.getMethod()) ;
+        AuthResponseHeader ah = AuthResponseHeader.parse(authorizationHeader, httpRequest.getMethod()) ;
         if ( ah == null )
             return createToken("", "", request, response);
         DigestSession perm = engine.getCredentials(ah.opaque) ;

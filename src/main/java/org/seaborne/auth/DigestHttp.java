@@ -128,7 +128,7 @@ public class DigestHttp {
         
         ServletContext servletContext = request.getServletContext() ;
         
-        AuthHeader authHeader = AuthHeader.parse(x, request.getMethod()) ;
+        AuthResponseHeader authHeader = AuthResponseHeader.parse(x, request.getMethod()) ;
         if ( authHeader == null ) {
             if ( log.isDebugEnabled() )
                 log.debug("accessYesOrNo: Bad auth header");
@@ -220,7 +220,7 @@ public class DigestHttp {
             //log.debug("Attempt: User = " + username + " : Password = " + password);
             log.debug("Attempt: User = " + username);
         
-        String digestCalc = calcDigest(authHeader, password) ;
+        String digestCalc = calcDigestResponse(authHeader, password) ;
         String digestRequest = authHeader.response ;
         
         if ( ! digestCalc.equals(digestRequest) ) {
@@ -289,12 +289,12 @@ public class DigestHttp {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
     }
 
-    /** From the digest header, and the expected credentials,
+    /** From the challenge response ("Authorization" header), and password, calculate the response.field.
      * calculate the string expected in the "response" field of the
-     * "Authorization" header.
+     * "Authorization" header. 
      * Method and URI are taken from the AuthHeader   
      */
-    private static String calcDigest(AuthHeader auth, String password) {
+    public static String calcDigestResponse(AuthResponseHeader auth, String password) {
         String a1 = A1_MD5(auth.username, auth.realm, password) ;
         if ( auth.qop == null ) {
             // RFC 2069
@@ -306,6 +306,22 @@ public class DigestHttp {
             Objects.nonNull(auth.nc) ;
             return KD(H(a1),
                       auth.nonce+":"+auth.nc+":"+auth.cnonce+":"+auth.qop+":"+H(A2_auth(auth.method, auth.uri))
+                    ) ;
+        }
+    }
+    /** From the challenge, username and password, calculate the response.field. */
+    public static String calcDigestChallengeResponse(AuthChallengeHeader auth, String username, String password, String cnonce, String nc, String authType) {
+        String a1 = A1_MD5(username, auth.realm, password) ;
+        if ( auth.qop == null ) {
+            // RFC 2069
+            // Firefox seems to prefer this form??
+            return KD(H(a1), auth.nonce+":"+H(A2_auth(auth.method, auth.uri))) ;
+        }
+        else {
+            Objects.nonNull(cnonce) ;
+            Objects.nonNull(nc) ;
+            return KD(H(a1),
+                      auth.nonce+":"+nc+":"+cnonce+":"+authType+":"+H(A2_auth(auth.method, auth.uri))
                     ) ;
         }
     }

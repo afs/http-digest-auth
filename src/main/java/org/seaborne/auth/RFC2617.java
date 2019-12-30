@@ -23,21 +23,21 @@ import java.util.Objects ;
 import org.apache.commons.codec.digest.DigestUtils ;
 
 /** Operations from RFC 2617, using MD5 (the default) */
-class RFC2617 {
+public class RFC2617 {
 
-    /*package*/ static String KD(String data) {
+    public static String KD(String data) {
         return H(data) ;
     }
 
-    /*package*/ static String KD(String secret, String data) {
+    public static String KD(String secret, String data) {
         return H(secret+":"+data) ;
     }
 
-    /*package*/ static String H(String string) {
+    public static String H(String string) {
         return DigestUtils.md5Hex(string) ;
     }
 
-    /*package*/ static String A1_MD5(String username, String realm, String password) {
+    public static String A1_MD5(String username, String realm, String password) {
         Objects.requireNonNull(username) ;
         Objects.requireNonNull(realm) ;
         Objects.requireNonNull(password) ;
@@ -45,7 +45,7 @@ class RFC2617 {
         return s ;
     }
 
-    /*package*/ static String A1_MD5_sess(String username, String realm, String password, String nonce, String cnonce) {
+    public static String A1_MD5_sess(String username, String realm, String password, String nonce, String cnonce) {
         Objects.requireNonNull(username) ;
         Objects.requireNonNull(realm) ;
         Objects.requireNonNull(password) ;
@@ -56,11 +56,11 @@ class RFC2617 {
         return s ;
     }
 
-    /*package*/static String A2_auth(String method, String uri) {
+    public static String A2_auth(String method, String uri) {
         return method+":"+uri ;
     }
 
-    /*package*/ static String A2_auth_int(String method, String uri, String entityBody) {
+    public static String A2_auth_int(String method, String uri, String entityBody) {
         throw new UnsupportedOperationException() ;
     }
 }

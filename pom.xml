@@ -34,14 +34,13 @@
   </licenses>
 
   <properties>
-    <ver.jena>3.1.0-SNAPSHOT</ver.jena>
-    <ver.fuseki>2.4.0-SNAPSHOT</ver.fuseki>
-    <ver.jetty>9.3.5.v20151012</ver.jetty>
-    <ver.shiro>1.2.4</ver.shiro>
-    <ver.commons>1.2.4</ver.commons>
-    <ver.commons-codec>1.10</ver.commons-codec>
-    <ver.commons-lang>3.4</ver.commons-lang>
-    <ver.slf4j>1.7.12</ver.slf4j>
+    <ver.jena>3.13.1</ver.jena>
+    <ver.fuseki>${ver.jena}</ver.fuseki>
+    <ver.jetty>9.4.12.v20180830</ver.jetty>
+    <ver.shiro>1.2.6</ver.shiro>
+    <ver.commons-codec>1.13</ver.commons-codec>
+    <ver.commons-lang>3.9</ver.commons-lang>
+    <ver.slf4j>1.7.25</ver.slf4j>
   </properties>
 
   <dependencies>
@@ -106,15 +105,15 @@
     </dependency>
 
     <dependency>
-	<groupId>commons-codec</groupId>
-	<artifactId>commons-codec</artifactId>
-	<version>${ver.commons-codec}</version>
+	    <groupId>commons-codec</groupId>
+	    <artifactId>commons-codec</artifactId>
+	    <version>${ver.commons-codec}</version>
     </dependency>
     
     <dependency>
-	<groupId>org.apache.commons</groupId>
-	<artifactId>commons-lang3</artifactId>
-	<version>${ver.commons-lang}</version>
+	    <groupId>org.apache.commons</groupId>
+	    <artifactId>commons-lang3</artifactId>
+	    <version>${ver.commons-lang}</version>
     </dependency>
     
     <!-- Development and standalone jar (if built) -->
@@ -140,7 +139,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-	    <version>2.3.2</version>
+	      <version>2.3.2</version>
         <configuration>
           <encoding>UTF-8</encoding>
           <debug>true</debug>
@@ -154,7 +153,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-	<version>2.12</version>
+	      <version>2.12</version>
         <configuration>
           <includes>
             <include>**/TS_*.java</include>
@@ -165,7 +164,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
-	<version>2.5</version>
+	      <version>2.5</version>
         <configuration>
           <encoding>UTF-8</encoding>
         </configuration>

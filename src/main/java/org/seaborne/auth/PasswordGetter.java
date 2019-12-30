@@ -21,7 +21,7 @@ package org.seaborne.auth;
 import javax.servlet.ServletContext ;
 
 /** Interface to express mapping user to password.
- * There may be different ways to manage password.  Teh Digest algoritms
+ * There may be different ways to manage password.  The Digest algorithms
  * does not say how they are managed.
  */
 @FunctionalInterface
