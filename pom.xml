@@ -34,13 +34,13 @@
   </licenses>
 
   <properties>
-    <ver.jena>3.13.1</ver.jena>
+    <ver.jena>3.16.0</ver.jena>
     <ver.fuseki>${ver.jena}</ver.fuseki>
-    <ver.jetty>9.4.12.v20180830</ver.jetty>
-    <ver.shiro>1.5.0</ver.shiro>
+    <ver.jetty>9.4.31.v20200723</ver.jetty>
+    <ver.shiro>1.6.0</ver.shiro>
     <ver.commons-codec>1.13</ver.commons-codec>
     <ver.commons-lang>3.9</ver.commons-lang>
-    <ver.slf4j>1.7.25</ver.slf4j>
+    <ver.slf4j>1.7.30</ver.slf4j>
   </properties>
 
   <dependencies>
@@ -126,7 +126,7 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.12</version>
+      <version>4.13.1</version>
       <scope>test</scope>
     </dependency>
 
