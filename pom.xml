@@ -36,7 +36,7 @@
   <properties>
     <ver.jena>3.16.0</ver.jena>
     <ver.fuseki>${ver.jena}</ver.fuseki>
-    <ver.jetty>9.4.31.v20200723</ver.jetty>
+    <ver.jetty>9.4.34.v20201102</ver.jetty>
     <ver.shiro>1.6.0</ver.shiro>
     <ver.commons-codec>1.13</ver.commons-codec>
     <ver.commons-lang>3.9</ver.commons-lang>
