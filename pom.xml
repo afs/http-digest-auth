@@ -34,13 +34,14 @@
   </licenses>
 
   <properties>
-    <ver.jena>3.16.0</ver.jena>
+    <ver.jena>4.1.0</ver.jena>
     <ver.fuseki>${ver.jena}</ver.fuseki>
     <ver.jetty>9.4.34.v20201102</ver.jetty>
     <ver.shiro>1.6.0</ver.shiro>
-    <ver.commons-codec>1.13</ver.commons-codec>
-    <ver.commons-lang>3.9</ver.commons-lang>
+    <ver.commons-codec>1.15</ver.commons-codec>
+    <ver.commons-lang>3.12.0</ver.commons-lang>
     <ver.slf4j>1.7.30</ver.slf4j>
+    <java.version>17</java.version>
   </properties>
 
   <dependencies>
@@ -139,14 +140,9 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-	      <version>2.3.2</version>
+        <version>3.8.1</version>
         <configuration>
-          <encoding>UTF-8</encoding>
-          <debug>true</debug>
-          <debuglevel>source,lines,vars</debuglevel>
-          <optimize>true</optimize>
-          <source>1.8</source>
-          <target>1.8</target>
+          <release>${java.version}</release>
         </configuration>
       </plugin>
 

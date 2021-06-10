@@ -28,43 +28,43 @@ import javax.servlet.http.HttpServletResponse ;
 import org.apache.jena.atlas.io.IO ;
 import org.apache.jena.atlas.lib.DateTimeUtils ;
 
-/** The ping servlet provides a low costy, uncached endpoint that can be used
+/** The ping servlet provides a low cost, uncached endpoint that can be used
  * to determine if this component is running and responding.  For example,
- * a nagios check should use this endpoint.    
+ * a nagios check should use this endpoint.
  */
 public class PingServlet extends HttpServlet
 {
     // Ping is special.
     // To avoid excessive logging and id allocation for a "noise" operation,
     // this is a raw servlet.
-    public PingServlet() { super() ; } 
-    
+    public PingServlet() { super() ; }
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
-        doCommon(req, resp); 
+        doCommon(req, resp);
     }
-    
+
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) {
-        doCommon(req, resp); 
+        doCommon(req, resp);
     }
-    
+
 
     @Override
     protected void doHead(HttpServletRequest req, HttpServletResponse resp) {
-        doCommon(req, resp); 
+        doCommon(req, resp);
     }
 
     protected void doCommon(HttpServletRequest request, HttpServletResponse response) {
         try {
-            ServletOps.setNoCache(response) ; 
+            ServletOps.setNoCache(response) ;
             response.setContentType("text/plain") ;
             response.setCharacterEncoding("utf-8") ;
             response.setStatus(HttpSC.OK_200);
             ServletOutputStream out = response.getOutputStream() ;
             out.println(DateTimeUtils.nowAsXSDDateTimeString());
         } catch (IOException ex) {
-            IO.exception(ex); 
+            IO.exception(ex);
         }
     }
 }
