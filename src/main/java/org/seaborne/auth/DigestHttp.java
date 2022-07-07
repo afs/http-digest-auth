@@ -18,8 +18,7 @@
 
 package org.seaborne.auth;
 
-import static org.seaborne.auth.RFC2617.A1_MD5 ;
-import static org.seaborne.auth.RFC2617.* ;
+import static org.seaborne.auth.RFC2617.*;
 
 import java.io.IOException ;
 import java.util.Map ;
@@ -35,7 +34,8 @@ import org.apache.commons.lang3.StringUtils ;
 import org.slf4j.Logger ;
 import org.slf4j.LoggerFactory ;
 
-/** Core engine for Digest Authetication (<a href="ftp://ftp.isi.edu/in-notes/rfc2617.txt">RFC 2617</a>).
+/** Core engine for Digest Authentication (<a href="ftp://ftp.isi.edu/in-notes/rfc2617.txt">RFC 2617</a>)
+ * server-side.
  * <p>
  * This implementation is a 'clean room' Java implementation of Digest HTTP Authentication specification per
  * <a href="https://tools.ietf.org/html/rfc2617">RFC 2617</a>.
@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory ;
  * <ol>
  * <li>A request comes in for a resource that requires authentication and authorization.</li>
  * <li>The server replies with a 401 response status, sets the <code>WWW-Authenticate</code> header,
- *  with a opaque string (to identify this session),   
+ *  with a opaque string (to identify this session),
  * <li>Upon receiving this <code>WWW-Authenticate</code> challenge from the server, the client then takes a
  * username and a password and calculates the response.
  * <li>The client then sends another request for the same resource with the following header:<br/>
@@ -54,16 +54,16 @@ import org.slf4j.LoggerFactory ;
  * in a way that an evesdropper can recover.  It is combined with other information and hashed
  * with MD5 or other comparable non-reversible hash function. (Only MD5 supported here.)
  * <p>
- * This class does not concern itself with how the password is obtained. 
- * See operation {@link #getPassword(ServletContext, String)}.     
+ * This class does not concern itself with how the password is obtained.
+ * See operation {@link #getPassword(ServletContext, String)}.
  *
  * @see <a href="https://tools.ietf.org/html/rfc2617">RFC 2617</a>
  * @see <a href="https://en.wikipedia.org/wiki/Digest_access_authentication">Wikipedia: Digest Access Authentication</a>
  */
 
 public class DigestHttp {
-    public enum AccessStatus { YES, NO, BAD }  
-    
+    public enum AccessStatus { YES, NO, BAD }
+
     /** Log on a provided logger. */
     private final Logger log ;
 
@@ -73,11 +73,11 @@ public class DigestHttp {
     /** HTTP Authentication header, equal to <code>WWW-Authenticate</code> */
     protected static final String AUTHENTICATE_HEADER = "WWW-Authenticate";
 
-    /** The name of the scheme */ 
+    /** The name of the scheme */
     private static String DIGEST_AUTH = HttpServletRequest.DIGEST_AUTH ;
 
     // XXX Concurrency.
-    
+
     // Map from the opaque to valid credentials.
     private Map<String, DigestSession> activeSessions = new ConcurrentHashMap<>() ;
 
@@ -87,9 +87,9 @@ public class DigestHttp {
 
     private final String realm ;
 
-    private final PasswordGetter passwordGetter; 
+    private final PasswordGetter passwordGetter;
     /** Create a HTTP digest authentication engine : subclass must implement
-     * {@link #getPassword} and {@link #getRealm}   
+     * {@link #getPassword} and {@link #getRealm}
      */
     protected DigestHttp(Logger log, PasswordGetter pwGetter) {
         this(log, null, pwGetter) ;
@@ -100,7 +100,7 @@ public class DigestHttp {
     }
 
     /** Create a HTTP digest authentication engine : subclass must implement
-     * {@link #getPassword} and {@link #getRealm}   
+     * {@link #getPassword} and {@link #getRealm}
      */
     public DigestHttp(Logger log, String realm, PasswordGetter pwGetter) {
         if ( log == null )
@@ -111,10 +111,10 @@ public class DigestHttp {
         this.passwordGetter = pwGetter ;
         this.log = log ;
     }
-    
-    /** The RFC 2617 algorithm for determing whether a request is acceptable or not.
+
+    /** The RFC 2617 algorithm for determining whether a request is acceptable or not.
      * See also {@link #sendChallenge(HttpServletRequest, HttpServletResponse)}.
-     * @return <code>true</code> if accepable, else <code>false</code>.
+     * @return <code>true</code> if acceptable, else <code>false</code>.
      */
     public AccessStatus accessYesOrNo(HttpServletRequest request, HttpServletResponse response) {
         String x = getAuthzHeader(request) ;
@@ -125,35 +125,35 @@ public class DigestHttp {
         }
         if ( log.isDebugEnabled() )
             log.debug("accessYesOrNo: "+x);
-        
+
         ServletContext servletContext = request.getServletContext() ;
-        
+
         AuthResponseHeader authHeader = AuthResponseHeader.parse(x, request.getMethod()) ;
         if ( authHeader == null ) {
             if ( log.isDebugEnabled() )
                 log.debug("accessYesOrNo: Bad auth header");
             return AccessStatus.BAD ;
         }
-        
+
         if ( ! authHeader.parsed.containsKey(AuthHeader.strDigest) ) {
             // XXX Does
             badRequest(request, response, "No 'Digest' in Authorization header") ;
             return AccessStatus.BAD ;
         }
-        
+
         if ( authHeader.opaque == null ) {
             if ( log.isDebugEnabled() )
                 log.debug("accessYesOrNo: Bad Authorization header") ;
             badRequest(request, response, "Bad Authorization header") ;
             return AccessStatus.BAD ;
         }
-        
-        // XXX CONCURRENECY 
-        
+
+        // XXX CONCURRENECY
+
         String opaque = authHeader.opaque ;
-        
+
         DigestSession digestSession = null ;
-        
+
         if ( activeSessions.containsKey(opaque) ) {
             digestSession = activeSessions.get(opaque) ;
         } else if ( pendingSessions.containsKey(opaque) ) {
@@ -161,44 +161,44 @@ public class DigestHttp {
             // but we check below for null.
             digestSession = pendingSessions.remove(opaque) ;
         }
-         
+
         if ( digestSession == null ) {
             if ( log.isDebugEnabled() )
                 log.debug("accessYesOrNo: No session for opaque found");
-            return AccessStatus.NO ; 
+            return AccessStatus.NO ;
         }
-        
+
         String requestUri = request.getRequestURI() ;
         String requestMethod = request.getMethod() ;
         String username = authHeader.username ;
-        
+
         // Some checks.
         // XXX Check in RFC
         if ( ! digestSession.username.isEmpty() && ! digestSession.username.equals(authHeader.username) ) {
             if ( log.isDebugEnabled() )
-                log.debug("Username change: header="+authHeader.username+" : expected"+ digestSession.username) ;  
+                log.debug("Username change: header="+authHeader.username+" : expected"+ digestSession.username) ;
             badRequest(request, response, "Different username in 'Authorization' header") ;
             return AccessStatus.BAD ;
         }
         if ( ! digestSession.realm.equals(authHeader.realm) ) {
             if ( log.isDebugEnabled() )
-                log.debug("Realm change: header="+authHeader.realm+" : expected"+ digestSession.realm) ;  
+                log.debug("Realm change: header="+authHeader.realm+" : expected"+ digestSession.realm) ;
             badRequest(request, response, "Different realm in 'Authorization' header") ;
             return AccessStatus.BAD ;
         }
         if ( ! requestUri.equals(authHeader.uri) ) {
             if ( log.isDebugEnabled() )
-                log.debug("URI change: header="+authHeader.uri+" : expected"+ requestUri) ;  
+                log.debug("URI change: header="+authHeader.uri+" : expected"+ requestUri) ;
             badRequest(request, response, "Different URI in 'Authorization' header") ;
             return AccessStatus.BAD ;
         }
         if ( ! requestMethod.equals(authHeader.method) ) {
             if ( log.isDebugEnabled() )
-                log.debug("Method change: header="+authHeader.method+" : expected"+ requestMethod) ;  
+                log.debug("Method change: header="+authHeader.method+" : expected"+ requestMethod) ;
             badRequest(request, response, "Different HTTP method in 'Authorization' header") ;
             return AccessStatus.BAD ;
         }
-        
+
         // Check nonce.
 //        log("Server nonce = "+perm.nonce);
 //        log("Header nonce = "+ah.nonce);
@@ -208,38 +208,38 @@ public class DigestHttp {
                 log.debug("No password for user '"+username+"'");
             return AccessStatus.NO ;
         }
-            
+
         String password = getPassword(servletContext, username) ;
         if ( password == null ) {
             if ( log.isDebugEnabled() )
                 log.debug("No password for user '"+username+"'");
             return AccessStatus.NO ;
         }
-        
+
         if ( log.isDebugEnabled() )
             //log.debug("Attempt: User = " + username + " : Password = " + password);
             log.debug("Attempt: User = " + username);
-        
+
         String digestCalc = calcDigestResponse(authHeader, password) ;
         String digestRequest = authHeader.response ;
-        
+
         if ( ! digestCalc.equals(digestRequest) ) {
             // Remove all.
             pendingSessions.remove(opaque) ;
             activeSessions.remove(opaque) ;
             if ( log.isDebugEnabled() )
                 log.debug("Digest does not match");
-            return AccessStatus.NO ; 
+            return AccessStatus.NO ;
         }
-        
-        boolean challengeResponse = StringUtils.isEmpty(digestSession.username) ; 
+
+        boolean challengeResponse = StringUtils.isEmpty(digestSession.username) ;
         if ( challengeResponse ) {
             // First time - complete digestSession details.
             digestSession.username = username ;
             activeSessions.put(opaque, digestSession) ;
         }
 
-        if ( log.isDebugEnabled() ) { 
+        if ( log.isDebugEnabled() ) {
             //log.debug("request: "+httpRequest.getRequestURI());
             log.debug("User "+digestSession.username+" authorized") ;
         }
@@ -248,14 +248,14 @@ public class DigestHttp {
 
     /** Return the session credentials keyed by {@code opaque}.
      * This is valid only after the first response to a challenga has been validated.
-     * It does not return partial credentials. 
+     * It does not return partial credentials.
      * @param opaque
      * @return DigestSession
      */
     public DigestSession getCredentials(String opaque) {
         return activeSessions.get(opaque) ;
     }
-    
+
     protected String getPassword(ServletContext servletContext, String username) {
         return passwordGetter.getPassword(servletContext, username) ;
     }
@@ -263,7 +263,7 @@ public class DigestHttp {
     private String getRealm() {
         return realm ;
     }
-    
+
     /** The RFC 2617 challenge response */
     public void sendChallenge(HttpServletRequest request, HttpServletResponse response) {
         if (log.isDebugEnabled()) {
@@ -271,12 +271,12 @@ public class DigestHttp {
         }
         String newNonce = genString() ;
         String newOpaque = genString() ;
-        
+
         // This is what we are expecting.
-        // No user or passord at this point.
+        // No user or password at this point.
         DigestSession perm = new DigestSession(newOpaque, getRealm(), request.getMethod(), request.getRequestURI(), newNonce) ;
         pendingSessions.put(newOpaque, perm) ;
-        
+
         String x = "Digest realm="+perm.realm
             +       " , qop=\"auth\""
             +       " , nonce=\""+perm.nonce+"\""
@@ -284,15 +284,15 @@ public class DigestHttp {
             ;
         if ( log.isDebugEnabled() )
             log.debug("Challenge: "+x);
-        
+
         response.setHeader(AUTHENTICATE_HEADER, x) ;
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
     }
 
     /** From the challenge response ("Authorization" header), and password, calculate the response.field.
      * calculate the string expected in the "response" field of the
-     * "Authorization" header. 
-     * Method and URI are taken from the AuthHeader   
+     * "Authorization" header.
+     * Method and URI are taken from the AuthHeader
      */
     public static String calcDigestResponse(AuthResponseHeader auth, String password) {
         String a1 = A1_MD5(auth.username, auth.realm, password) ;
@@ -325,7 +325,7 @@ public class DigestHttp {
                     ) ;
         }
     }
-        
+
     /**
      * Returns the {@link #AUTHORIZATION_HEADER AUTHORIZATION_HEADER} from the specified HttpServletRequest.
      */
@@ -333,12 +333,12 @@ public class DigestHttp {
         return request.getHeader(AUTHORIZATION_HEADER);
     }
 
-    // Generate unguessable hex strings 
+    // Generate unguessable hex strings
     private static String genString() { return  UUID.randomUUID().toString().replaceAll("-",  "") ; }
 
     private void badRequest(HttpServletRequest request, HttpServletResponse response, String message) {
         try { response.sendError(HttpServletResponse.SC_BAD_REQUEST, message); }
-        catch (IOException e) { 
+        catch (IOException e) {
             log.warn("Exception on sending 400: "+e.getMessage());
         }
     }
