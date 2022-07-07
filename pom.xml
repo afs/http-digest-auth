@@ -42,6 +42,7 @@
     <ver.commons-lang>3.12.0</ver.commons-lang>
     <ver.slf4j>1.7.30</ver.slf4j>
     <java.version>17</java.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
   <dependencies>
