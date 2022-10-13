@@ -37,7 +37,7 @@
     <ver.jena>4.1.0</ver.jena>
     <ver.fuseki>${ver.jena}</ver.fuseki>
     <ver.jetty>9.4.34.v20201102</ver.jetty>
-    <ver.shiro>1.9.1</ver.shiro>
+    <ver.shiro>1.10.0</ver.shiro>
     <ver.commons-codec>1.15</ver.commons-codec>
     <ver.commons-lang>3.12.0</ver.commons-lang>
     <ver.slf4j>1.7.30</ver.slf4j>
