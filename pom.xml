@@ -39,7 +39,7 @@
     <ver.jetty>9.4.54.v20240208</ver.jetty>
     <ver.shiro>1.13.0</ver.shiro>
     <ver.commons-codec>1.15</ver.commons-codec>
-    <ver.commons-lang>3.12.0</ver.commons-lang>
+    <ver.commons-lang>3.18.0</ver.commons-lang>
     <ver.slf4j>1.7.30</ver.slf4j>
     <java.version>17</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
